@@ -1,0 +1,4 @@
+; $Id$
+name = weather broadcast
+description = "this model is for current weather condition"
+core = 6.x

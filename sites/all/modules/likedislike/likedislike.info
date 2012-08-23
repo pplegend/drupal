@@ -1,0 +1,4 @@
+; $Id$
+name = like dislike
+description = "this model is for like or dislike a node"
+core = 6.x

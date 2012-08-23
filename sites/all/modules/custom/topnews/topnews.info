@@ -1,0 +1,4 @@
+; $Id$
+name = top news
+description = "this model is for display top news in front page"
+core = 6.x

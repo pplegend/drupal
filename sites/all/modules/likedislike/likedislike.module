@@ -1,0 +1,57 @@
+<?php
+/**
+  *Implementation of hook_meun()
+  */
+
+function likedislike_menu(){
+  $menu['context/like/%']=array(
+    'title' => t('like this'),
+    'page callback'=>'like_callback',
+    'page arguments'=>array(2),
+    'access arguments' =>array('create rate'),
+    'file'=>'likedislike.pages.inc',
+    'type'=>MENU_CALLBACK,
+  );
+  $menu['context/dislike/%']=array(
+    'title' => t('do not like this'),
+    'page callback'=>'dislike_callback',
+    'page arguments'=>array(2),
+    'access arguments' =>array('create rate'),
+    'file'=>'likedislike.pages.inc',
+    'type'=>MENU_CALLBACK,
+  );  
+
+}
+
+
+
+function likedislike_perm() {
+  return array('create rate', 'edit rate');
+}
+
+
+function likedislike_access($op, $node, $account) {
+
+  if ($op == 'create') {
+    // Only users with permission to do so may create this node type.
+    return user_access('create rate', $account);
+  }
+
+  // Users who create a node may edit or delete it later, assuming they have the
+  // necessary permissions.
+  if ($op == 'update' || $op == 'delete') {
+    if (user_access('edit rate',$account)) {
+      return TRUE;
+    }
+  }
+}
+
+
+function likedislike_help($path, $arg) {
+  switch ($path) {
+    case 'admin/help#likedislike':
+      return '<p>' . t('This module was created by localhost.') . '</p>';
+      break;
+  }
+}
+?>

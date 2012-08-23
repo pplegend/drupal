@@ -1,0 +1,5 @@
+; $Id$
+name = news from google news
+description = "Get related news from google news"
+core = 6.x
+

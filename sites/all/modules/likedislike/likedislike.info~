@@ -1,0 +1,4 @@
+; $Id$
+name = fun text
+description = "this model is for fun text"
+core = 6.x

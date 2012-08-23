@@ -1,0 +1,69 @@
+<?php
+/**
+  *Implementation of hook_block()
+  */
+function categorylist_block($op='list',$delta=0, $edit=array()){
+  switch ($op) {
+    case 'list':
+      $blocks[0]['info']=t('Category hot stories');
+      return $blocks;
+    case 'view':
+      $blocks['subject']=t('');
+      $blocks['content']=_get_top_storys();
+      return $blocks;
+  }
+}
+
+function _get_top_storys(){
+  $categories= array();
+  $sql='SELECT distinct field_category_value FROM {content_type_page} WHERE 1 ';
+  $res=db_query($sql);
+  while($row=db_fetch_object($res)){
+   $categories[]=$row->field_category_value;
+  }
+  
+ $num=count($categories);
+$template=' 
+<div style="position:relative;">
+ <h2 class="category_title">%s</h2>
+  <div class="category_first_story">
+    <p><a href="/photos/node/%d"> %s </a><p>
+    <div class="field-field-image1"> <img class="imagecache-main_image" src="%s"
+            alt="image path" />
+    </div>
+    <p>%s</p> 
+  </div>
+  <div class="topic_list"><ul> %s </ul>  </div>
+</div>
+';
+$out='';
+
+$title_template='<li> <a href="/photos/node/%d"> %s</a></li>';
+for($i=0;$i<$num;$i++){
+   $sqln='
+SELECT node.title AS title,
+node.nid AS nid,
+node_revisions.teaser AS teaser,node_data_field_image1.field_image1_fid AS node_data_field_image1_field_image1_fid 
+FROM {node} node
+LEFT JOIN {content_type_page} node_data_field_image1 ON node.vid = node_data_field_image1.vid
+LEFT JOIN {node_revisions} node_revisions ON node.vid = node_revisions.vid
+WHERE  node_data_field_image1.field_category_value="%s"
+
+';
+$result=db_query($sqln,$categories[$i]);
+$title_list="";
+while($res=db_fetch_object($result)){
+$category=$categories[$i];
+$node_id=$res->nid;
+$title=$res->title;
+$file=field_file_load($res->node_data_field_image1_field_image1_fid);
+$filepath=$file['filepath'];
+$teaser=$res->teaser;
+
+$title_list.=sprintf($title_template,$node_id,$title);
+}
+
+$out.=sprintf($template,$category,$node_id,$title,$filepath,$teaser,$title_list);
+}
+return $out;
+}

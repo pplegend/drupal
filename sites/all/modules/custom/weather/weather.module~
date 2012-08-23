@@ -1,0 +1,69 @@
+<?php
+/**
+  * Implementaion of hook_block
+  */
+function weather_block($op='list',$delta=0,$edit=array()){
+ switch ($op){
+  case 'list':
+    $blocks[0]['info']=t('Yahoo weather');
+    return $blocks;
+  case 'view':
+    $url='http://weather.yahooapis.com/forecastjson?w=12828113&u=c&d=1';
+    $blocks['subject']=t('Espoo weather');
+    $blocks['content']=_yahoo_fetch_weather($url);
+    return $blocks;
+ }
+}
+
+/**
+* Retrieve information from the Yahoo XML API.
+*
+* This makes an HTTP connection to the given URL, and
+* retrieves XML data, which it then attempts to format
+* for display.
+*
+* @param $url
+* URL to the Yahoo weather
+* Number of items to include in results.
+* @return
+* String containing the weather information.
+*/
+
+function _yahoo_fetch_weather($url){
+ $http_result=drupal_http_request($url);
+ $template='
+   <div><p class="bottom-border"><img src="%s" /> <span style="float:right"><strong>%d °C </strong><br>%s<br> Wind:%s m/s <br> humidity: %s</span> </p> </div>
+ ';
+ $out='';
+ $forcust='';
+ if ($http_result->code ==200){
+   $data_arr=json_decode(($http_result->data),true);
+   $unit=$data_arr['units']['temperature'];
+   $location=$data_arr['location']['city'];
+   $wind_speed=$data_arr['wind']['speed'];
+   $humidity=$data_arr['atmosphere']['humidity'];
+   $condition=$data_arr['condition']['text'];
+   $condition_img=str_replace("\\","",$data_arr['condition']['image']);
+   $temperature=$data_arr['condition']['temperature'];
+   $count=count($data_arr['forecast']);
+   for($i=0;$i<$count;$i++){
+    $date=$data_arr['forecast'][$i]['day'];
+    $high_temperature=$data_arr['forecast'][$i]['high_temperature'];
+    $low_temperature=$data_arr['forecast'][$i]['low_temperature'];
+    $foucust.=$date.": ".$high_temperature."° <span class='low_temperature'>".$low_temperature."°</span><br>";
+   }
+   $out=sprintf($template,$condition_img,$temperature,$condition,$wind_speed,$humidity);
+   $out.=$foucust;
+   return $out;
+ }
+ else{
+  $msg = 'No content from %url.';
+  $vars = array('%url' => $url);
+  watchdog('goodreads', $msg, $vars, WATCHDOG_WARNING);
+  return t("The weather information is not accessible.");
+
+ }
+}
+
+
+

@@ -1,0 +1,118 @@
+<?php
+function funtext_node_info() {
+  return array(
+    'funtext' => array(
+      'name' => t('fun text node'),
+      'module' => 'funtext',
+      'description' => "This is a fun text node type with a few fields.",
+    )
+  );
+} 
+
+function funtext_perm() {
+  return array('create funtext', 'edit own funtext');
+}
+
+
+function funtext_access($op, $node, $account) {
+
+  if ($op == 'create') {
+    // Only users with permission to do so may create this node type.
+    return user_access('create funtext', $account);
+  }
+
+  // Users who create a node may edit or delete it later, assuming they have the
+  // necessary permissions.
+  if ($op == 'update' || $op == 'delete') {
+    if (user_access('edit own funtext',$account) && ($account->uid == $node->uid)) {
+      return TRUE;
+    }
+  }
+}
+
+function funtext_form(&$node, $form_state) {
+  $type = node_get_types('type', $node);
+
+  // We need to define form elements for the node's body.
+
+  // We want the body and filter elements to be adjacent. We could try doing
+  // this by setting their weights, but another module might add elements to the
+  // form with the same weights and end up between ours. By putting them into a
+  // sub-array together, we're able force them to be rendered together.
+  $form['body_filter']['body'] = array(
+    '#type' => 'textarea',
+    '#title' => check_plain($type->body_label),
+    '#default_value' => $node->body,
+    '#required' => FALSE
+  );
+  $form['body_filter']['filter'] = filter_form($node->format);
+
+  // NOTE in node_example there is some addition code here not needed for this simple node-type
+
+  return $form;
+}
+
+
+function funtext_help($path, $arg) {
+  switch ($path) {
+    case 'admin/help#funtext':
+      return '<p>' . t('This module was created by localhost.') . '</p>';
+      break;
+  }
+}
+
+/**
+  *Implementation of hook_load()
+  */
+ function funtext_load($node){
+  
+  
+  //$node_obj==db_fetch_object(db_query('SELECT body FROM {node_revisions} WHERE nid= %d', $node->nid));
+  $likedislike=db_query('SELECT likeit, dislike FROM {likedislike} WHERE nid= %d', $node->nid);
+  $likedislike_obj=db_fetch_object($likedislike);
+ // $result=new stdClass();
+  //$result->body=$node->body;
+  if($likedislike_obj){
+    $node->likeit=$likedislike_obj->likeit;
+    $node->dislike=$likedislike_obj->dislike;
+  }else{
+    $node->likeit=0;
+    $node->dislike=0;
+ }
+
+  return $node;
+}
+
+/**
+  * Implementation of hook_view()
+  */
+
+ function funtext_view($node, $teaser = FALSE, $page = FALSE){
+ $node=node_prepare($node, $teaser);
+ $text=$node->body;
+ $like=$node->likeit;
+ $dislike=$node->dislike;
+ $node->content['funtext_info']=array(
+  '#value'=>theme('funtext_info',$text,$like,$dislike),
+  '#weight'=>1,
+ );
+ return $node;
+ }
+/**
+  * Implementation of hook_theme()
+  */
+
+ function funtext_theme(){
+  return array(
+   'funtext_info'=>array(
+     'template'=>'funtext_info',
+     'arguments'=>array(
+       'text'=>NULL,
+       'like'=>NULL,
+       'dislike'=>NULL,
+     ),
+   ),
+  );
+
+}
+?>

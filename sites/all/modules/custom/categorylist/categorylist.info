@@ -1,0 +1,4 @@
+; $Id$
+name = Front page category list
+description = "this model is for display top story of each category in front page"
+core = 6.x

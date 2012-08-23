@@ -1,0 +1,120 @@
+
+<?php
+/**
+  * Implementaion of hook_block
+  */
+function newsfeed_block($op='list',$delta=0,$edit=array()){
+ switch ($op){
+  case 'list':
+    $blocks[0]['info']=t('Google news');
+    return $blocks;
+  case 'view':
+    $outputs=_google_fetch_news("h");
+    $content=theme('newsfeed',$outputs);
+    $blocks['subject']=t('Google news');
+    $blocks['content']=$content;
+    return $blocks;
+ }
+}
+
+/**
+  * Implementation of hook_menu()
+  */
+function newsfeed_menu(){
+ $items['newsfeed/%']=array(
+   'title'=>'Google news feed',
+   'page callback'=>'_google_fetch_news_ajax',
+   'page arguments'=>array(1),
+   'access arguments'=>array('access content'),
+   'type'=>MENU_CALLBACK,
+ );
+ return $items;
+}
+
+/**
+* Implementation of hook_theme()
+*/
+function newsfeed_theme() {
+return array(
+'newsfeed' => array(
+'arguments' => array('outputs' => NULL,),
+),
+);
+}
+
+/**
+  *Implementation theme_hook
+  */
+
+function theme_newsfeed($outputs){
+ drupal_add_js(drupal_get_path('module','newsfeed').'/js/ajax.js');
+ $opts=array('absolute'=>TRUE);
+ $ajax_url=url('newsfeed/s',$opts);
+ drupal_add_js(
+  array('newsfeed'=>array("newsfeed_url"=>$ajax_url),'setting')
+ );
+ return $outputs;
+}
+/**
+  *Ajax function for get google news
+  */
+function _google_fetch_news_ajax($topic, $num_item=7){
+  $url="http://news.google.com/news?ned=us&topic=$topic&output=rss&num=$num_item";
+ $http_result = drupal_http_request($url);
+ if ($http_result->code == 200) {
+   $doc = simplexml_load_string($http_result->data);
+   if ($doc === false) {
+     $msg = "Error parsing google news XML for %url: %msg.";
+     $vars = array('%url'=>$url, '%msg'=>$e->getMessage());
+     watchdog('goodreads', $msg, $vars, WATCHDOG_WARNING);
+     print t("Getting the news resulted in an error.");
+    }
+  print _googlenews_block_content($doc, $num_item);
+  exit();
+  }
+}
+
+
+function _google_fetch_news($topic, $num_item=7){
+ 
+ $url="http://news.google.com/news?ned=us&topic=$topic&output=rss&num=$num_item";
+ $http_result = drupal_http_request($url);
+ if ($http_result->code == 200) {
+   $doc = simplexml_load_string($http_result->data);
+   if ($doc === false) {
+     $msg = "Error parsing google news XML for %url: %msg.";
+     $vars = array('%url'=>$url, '%msg'=>$e->getMessage());
+     watchdog('goodreads', $msg, $vars, WATCHDOG_WARNING);
+     return t("Getting the news resulted in an error.");
+    }
+  return _googlenews_block_content($doc, $num_item);
+  
+
+ }
+ else {
+  $msg = 'No content from %url.';
+  $vars = array('%url' => $url);
+  watchdog('google news', $msg, $vars, WATCHDOG_WARNING);
+  return t("The news is not accessible.");
+}
+
+}
+
+function _googlenews_block_content($doc, $num_items){
+ $items=$doc->channel->item;
+ $category=$doc->channel->image->title;
+ $position=strrpos($category,"-");
+ $category=substr( $category,0,$position);
+ $out="<p class=''><span class='title newsfeed_tab_sport'>Sports</span><span class='title newsfeed_tab_healthy'>Healthy</span> <span class='title newsfeed_tab'>Hot news</span><span class='title newsfeed_tab_tech'>Technology</span>
+<span class='title newsfeed_tab_buss'>Business</span></p> <h2 class='title '> $category </h2><div id='myclass' style='overflow: hidden; position: relative; height: 228px;'> <ul>";
+ $template='
+  <li><span><a href="%s"> %s </a> <span></li>
+ ';
+ foreach ($items as $item){
+  $title=$item->title;
+  $link=$item->link;
+  $out.=sprintf($template,$link,$title);
+ }
+ $out.='</ul>';
+ return $out;
+}

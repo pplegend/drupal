@@ -1,0 +1,34 @@
+$(document).ready(function(){
+ $(".newsfeed_tab_sport").click({param1:"s"},Newsfeed.news);
+ $(".newsfeed_tab_tech").click({param1:"t"},Newsfeed.news);
+ $(".newsfeed_tab_buss").click({param1:"b"},Newsfeed.news);
+ $(".newsfeed_tab_healthy").click({param1:"m"},Newsfeed.news);
+
+$('#myclass').vTicker({
+	speed: 500,
+	pause: 3000,
+	showItems: 6,
+	animation: 'fade',
+	mousePause: false,
+	height: 0,
+	direction: 'up'
+	});
+});
+var Newsfeed={};
+if(Drupal.jsEnabled){
+
+ Newsfeed.news=function(event){
+  $.get("/photos/newsfeed/"+event.data.param1,function(data){
+   $("#block-newsfeed-0 div.content:first").html(data);
+	$('#myclass').vTicker({
+	speed: 500,
+	pause: 3000,
+	showItems: 6,
+	animation: 'fade',
+	mousePause: false,
+	height: 0,
+	direction: 'up'
+	});
+ });
+ }
+}

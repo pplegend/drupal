@@ -1,0 +1,48 @@
+<?php
+/**
+  * Implementaion of hook_block
+  */
+function newsfeed_block($op='list',$delta=0,$edit=array()){
+ switch ($op){
+  case 'list':
+    $blocks[0]['info']=t('Google news');
+    return $blocks;
+  case 'view':
+    $blocks['subject']=t('Espoo weather');
+    $blocks['content']=_google_fetch_news('h');
+    return $blocks;
+ }
+}
+
+function _google_fetch_news($topic, $num_item=5){
+ $url='http://news.google.com/news?ned=us&topic=$topic&output=rss&num_item=$num_item';
+ $http_result = drupal_http_request($url);
+ if ($http_result->code == 200) {
+   $doc = simplexml_load_string($http_result->data);
+   if ($doc === false) {
+     $msg = "Error parsing google news XML for %url: %msg.";
+     $vars = array('%url'=>$url, '%msg'=>$e->getMessage());
+     watchdog('goodreads', $msg, $vars, WATCHDOG_WARNING);
+     return t("Getting the news resulted in an error.");
+    }
+ return _googlenews_block_content($doc, $num_items);
+
+ }
+ else {
+  $msg = 'No content from %url.';
+  $vars = array('%url' => $url);
+  watchdog('google news', $msg, $vars, WATCHDOG_WARNING);
+  return t("The news is not accessible.");
+}
+
+}
+
+function _googlenews_block_content($doc, $num_items){
+ $items=$doc->channel->item;
+ $count_items=count($items);
+ $len =($count_items < $num_items)? $count_items :$num_items;
+ foreach ($items as $item){
+  $title=$item->title;
+ }
+ return $title;
+}

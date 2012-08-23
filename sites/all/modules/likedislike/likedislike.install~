@@ -1,0 +1,59 @@
+<?php
+// $Id$
+/**
+* Install the likedislike module
+* type.
+* @file
+*/
+/**
+* Implementation of hook_install().
+*/
+function likedislike_install(){
+  drupal_install_schema('likedislike');
+}
+
+/**
+* Implementation of hook_uninstall().
+*/
+function likedislike_uninstall() {
+drupal_uninstall_schema('likedislike');
+}
+/**
+  * Implementation of hook_schema()
+  */
+
+function likedislike_schema(){
+  $schema['likedislike']=array(
+    'fields'=>array(
+	'id'=>array(
+	   'type'=>'int',
+	   'unsigned'=>TRUE,
+	   'not null'=>TRUE,
+	   'default'=>0,
+	),
+	'nid'=>array(
+	   'type'=>'int',
+	   'unsigned'=>TRUE,
+	   'not null'=>TRUE,
+	   'default'=>0,
+	),
+	'like'=>array(
+	   'type'=>'int',
+	   'unsigned'=>TRUE,
+	   'not null'=>TRUE,
+	   'default'=>0,
+	),
+	'dislike'=>array(
+	   'type'=>'int',
+	   'unsigned'=>TRUE,
+	   'not null'=>TRUE,
+	   'default'=>0,
+	),
+    ),
+    'indexes'=>array(
+	'nid'=>array('nid'),
+    ),
+    'primary key'=>array('id'),
+  );
+  return $schema;
+}

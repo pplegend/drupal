@@ -1,0 +1,38 @@
+<?php
+/**
+  * Menu callback for like
+  */
+
+ function like_callback($node_id){
+  $get_node='SELECT likeit FROM {likedislike} WHERE nid = %d';
+  $result=db_fetch_object(db_query($get_node,$node_id));
+  if($result){
+    $new_like=$result->likeit + 1;
+    $update_like='UPDATE {likedislike} SET likeit =%d WHERE nid = %d';
+    db_query($update_like,$new_like, $node_id);
+  }else{
+   
+    $insert_like='INSERT INTO {likedislike} (nid, likeit, dislike )'
+      ."VALUES (%d,%d,%d)",
+      $node_id,1,0;
+  }
+
+
+/**
+  * Menu callback for dislike
+  */
+
+ function dislike_callback($node_id){
+  $get_node='SELECT likeit FROM {likedislike} WHERE nid = %d';
+  $result=db_fetch_object(db_query($get_node,$node_id));
+  if($result){
+    $new_dislike=$result->dislike + 1;
+    $update_like='UPDATE {likedislike} SET dislike =%d WHERE nid = %d';
+    db_query($update_like,$new_dislike, $node_id);
+  }else{
+   
+    $insert_like='INSERT INTO {likedislike} (nid, likeit, dislike )'
+      ."VALUES (%d,%d,%d)",
+      $node_id,0,1;
+  }
+ }

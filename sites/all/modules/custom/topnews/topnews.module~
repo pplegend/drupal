@@ -1,0 +1,61 @@
+<?php
+/**
+  *Implementation of hook_block()
+  */
+function topnews_block($op='list',$delta=0, $edit=array()){
+  switch ($op) {
+    case 'list':
+      $blocks[0]['info']=t('Top news story');
+      return $blocks;
+    case 'view':
+      $blocks['subject']=t('top news');
+      $blocks['content']=_get_top_news();
+      return $blocks;
+  }
+}
+
+function _get_top_news(){
+  $sql="SELECT  node.nid AS nid,
+   node.title AS node_title,
+   node_data_field_image1.field_image1_fid AS node_data_field_image1_field_image1_fid,
+   node_data_field_image1.field_image1_list AS node_data_field_image1_field_image1_list,
+   node_data_field_image1.field_image1_data AS node_data_field_image1_field_image1_data,
+   node.type AS node_type,
+   node.vid AS node_vid,
+   node_revisions.teaser AS node_revisions_teaser,
+   node_revisions.format AS node_revisions_format,
+   node.created AS node_created
+ FROM {node} node 
+ LEFT JOIN {content_type_page} node_data_field_image1 ON node.vid = node_data_field_image1.vid
+ LEFT JOIN {node_revisions} node_revisions ON node.vid = node_revisions.vid
+    ORDER BY node_created DESC";
+  $res=db_query_range($sql,0,5);
+  $results=array();
+  $out='';
+  $template='<div class="slide_content" id="%s"> <h2><p id="node_title"><a href="/photos/node/%d"> %s </a></p></h2> <div class="field-field-image1"> <img class="imagecache-main_image" src="%s"
+            alt="image path" /> </div><p>%s</p> </div> ';
+  $count=0;
+  $paging='<div class="paging" style="display: block;">';
+  $paging_template='<a rel="%d" href="#" class=""> %d </a>';
+  while($row=db_fetch_object($res)){
+   $count++;
+   $file=field_file_load($row->node_data_field_image1_field_image1_fid);
+   $filepath=$file['filepath'];
+   $id=$row->nid;
+   $title=$row->node_title;
+   $image_id=$row->node_data_field_image1_field_image1_fid;
+   $teaser=$row->node_revisions_teaser;
+   $paging.=sprintf($paging_template,$count,$count);
+   $out.= sprintf($template,$id,$id,$title,$filepath,$teaser);
+  }
+
+  $out="<div id='top_news_container'>".$out."</div>";
+  $paging.="</div>";
+
+  
+    $out.= $paging;
+
+  return $out;
+}
+
+
